@@ -17,14 +17,13 @@
  *
  ******************************************************************************/
 
-
 #ifndef _STESEAPI_H_
 #define _STESEAPI_H_
 
 #include <stdint.h>
 
 typedef struct StEse_data {
-  uint8_t len;     /*!< length of the buffer */
+  uint16_t len;    /*!< length of the buffer */
   uint8_t* p_data; /*!< pointer to a buffer */
 } StEse_data;
 
@@ -43,9 +42,6 @@ typedef enum {
 
 typedef enum {
   ESE_STATUS_CLOSE = 0x00,
-  ESE_STATUS_BUSY,
-  ESE_STATUS_RECOVERY,
-  ESE_STATUS_IDLE,
   ESE_STATUS_OPEN,
 } SpiEse_status;
 
@@ -112,5 +108,16 @@ ESESTATUS StEse_close(void);
  */
 bool StEseApi_isOpen();
 
+/**
+ * StEse_getAtr
+ *
+ * This function get the last ATR received.
+ *
+ * @param    void
+ *
+ * @return   pointer to the ATP array.
+ *
+ */
+uint8_t* StEse_getAtr(void);
 
 #endif /* _STESEAPI_H_ */

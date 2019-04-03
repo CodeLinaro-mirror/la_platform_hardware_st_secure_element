@@ -67,8 +67,15 @@ Return<void> SecureElement::init(
 }
 
 Return<void> SecureElement::getAtr(getAtr_cb _hidl_cb) {
-  hidl_vec<uint8_t> response = {0x25, 0xd2, 0x76, 0x0,  0x1,  0x18, 0x06,
-                                0x90, 0x32, 0x32, 0x2a, 0xf8, 0x01, 0xfe};
+  ALOGD("%s: Enter", __func__);
+  hidl_vec<uint8_t> response;
+  uint8_t* ATP;
+  ATP = StEse_getAtr();
+  uint8_t len = *ATP;
+  if (len) {
+    response.resize(len);
+    memcpy(&response[0], ATP, len);
+  }
   _hidl_cb(response);
   return Void();
 }
@@ -159,7 +166,9 @@ Return<void> SecureElement::openLogicalChannel(const hidl_vec<uint8_t>& aid,
   }
   /*Free the allocations*/
   free(cmdApdu.p_data);
+  cmdApdu.p_data = NULL;
   free(rspApdu.p_data);
+  rspApdu.p_data = NULL;
   if (sestatus != SecureElementStatus::SUCCESS) {
     /*If manageChanle is failed in any of above cases
     send the callback and return*/
@@ -176,7 +185,7 @@ Return<void> SecureElement::openLogicalChannel(const hidl_vec<uint8_t>& aid,
   memset(&cmdApdu, 0x00, sizeof(StEse_data));
   memset(&rspApdu, 0x00, sizeof(StEse_data));
 
-  cmdApdu.len = (int32_t)(5 + aid.size());
+  cmdApdu.len = (int32_t)(6 + aid.size());
   cmdApdu.p_data = (uint8_t*)malloc(cmdApdu.len * sizeof(uint8_t));
   if (cmdApdu.p_data != NULL) {
     uint8_t xx = 0;
@@ -186,7 +195,7 @@ Return<void> SecureElement::openLogicalChannel(const hidl_vec<uint8_t>& aid,
     cmdApdu.p_data[xx++] = p2;          // P2
     cmdApdu.p_data[xx++] = aid.size();  // Lc
     memcpy(&cmdApdu.p_data[xx], aid.data(), aid.size());
-
+    cmdApdu.p_data[xx + aid.size()] = 0x00;  // Le
     status = StEse_Transceive(&cmdApdu, &rspApdu);
   }
 
@@ -255,7 +264,7 @@ Return<void> SecureElement::openBasicChannel(const hidl_vec<uint8_t>& aid,
   memset(&cmdApdu, 0x00, sizeof(StEse_data));
   memset(&rspApdu, 0x00, sizeof(StEse_data));
 
-  cmdApdu.len = (int32_t)(5 + aid.size());
+  cmdApdu.len = (int32_t)(6 + aid.size());
   cmdApdu.p_data = (uint8_t*)malloc(cmdApdu.len * sizeof(uint8_t));
   if (cmdApdu.p_data != NULL) {
     uint8_t xx = 0;
@@ -265,6 +274,7 @@ Return<void> SecureElement::openBasicChannel(const hidl_vec<uint8_t>& aid,
     cmdApdu.p_data[xx++] = p2;          // P2
     cmdApdu.p_data[xx++] = aid.size();  // Lc
     memcpy(&cmdApdu.p_data[xx], aid.data(), aid.size());
+    cmdApdu.p_data[xx + aid.size()] = 0x00;  // Le
 
     status = StEse_Transceive(&cmdApdu, &rspApdu);
   }

@@ -35,7 +35,7 @@ struct timeval lastRxTxTime;
 **
 ** Parameters       spiDevPath - Spi device path.
 **
-** Returns          0 if everything is ok, -1 otherwise.
+** Returns          the file descriptor if everything is ok, -1 otherwise.
 **
 *******************************************************************************/
 int SpiLayerDriver_open(char* spiDevPath) {
@@ -50,7 +50,7 @@ int SpiLayerDriver_open(char* spiDevPath) {
   currentMode = MODE_RX;
   gettimeofday(&lastRxTxTime, 0);
 
-  return 0;
+  return spiDeviceId;
 }
 
 /*******************************************************************************
@@ -143,4 +143,19 @@ int SpiLayerDriver_write(uint8_t* txBuffer, unsigned int txBufferLength) {
   int rc = write(spiDeviceId, txBuffer, txBufferLength);
   gettimeofday(&lastRxTxTime, 0);
   return rc;
+}
+
+/*******************************************************************************
+**
+** Function         SpiLayerDriver_reset
+**
+** Description      Send a Reset pulse to the eSE.
+**
+** Parameters       none
+**
+** Returns          O if success, -1 otherwise
+**
+*******************************************************************************/
+int SpiLayerDriver_reset() {
+  return ioctl(spiDeviceId, ST54J_SE_PULSE_RESET, NULL);
 }

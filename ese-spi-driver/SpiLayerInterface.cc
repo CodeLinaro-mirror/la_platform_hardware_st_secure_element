@@ -24,6 +24,8 @@
 #include "T1protocol.h"
 #include "android_logmsg.h"
 #include "utils-lib/Atp.h"
+#include <errno.h>
+#include <string.h>
 
 #define SPI_BITS_PER_WORD 8
 #define SPI_MODE SPI_MODE_0
@@ -46,19 +48,13 @@ int SpiLayerInterface_init(SpiDriver_config_t* tSpiDriver) {
 
   // Configure the SPI before start the data exchange with the eSE
   char* spiDevPath = tSpiDriver->pDevName;
-  if (SpiLayerDriver_open(spiDevPath) != 0) {
+
+  int DevHandle = SpiLayerDriver_open(spiDevPath);
+  tSpiDriver->pDevHandle = (void*)((intptr_t)DevHandle);
+  if (DevHandle == -1) {
     // Error configuring the SPI bus
     STLOG_HAL_E("Error configuring the SPI bus.");
     return -1;
-  }
-  // Check if ATP file exists
-  // If it exists, it means that ATP was previously read and hence we do not
-  // need to read it again
-  if (fopen(ATP_FILE_PATH, "rb")) {
-    STLOG_HAL_V("ATP file exists.");
-    // ATP is stored in the file: load the config from the file and return.
-    SpiLayerComm_readAtpFromFile();
-    return 0;
   }
 
   // First of all, read the ATP from the slave
@@ -130,9 +126,11 @@ int SpiLayerInterface_transcieveTpdu(Tpdu* cmdTpdu, Tpdu* respTpdu,
   }
   STLOG_HAL_D("%d bytes read from SPI interface", bytesRead);
 
-  char respTpduHexString[(5 + respTpdu->len) * 3];
-  Tpdu_toHexString(respTpdu, respTpduHexString);
-  STLOG_HAL_D("spiRx < %s", respTpduHexString);
+  uint8_t buffer[(5 + respTpdu->len)];
+  uint16_t length = Tpdu_toByteArray(respTpdu, buffer);
+  if (length > 0) {
+    DispHal("Rx", buffer, length);
+  }
   return bytesRead;
 }
 

@@ -31,11 +31,13 @@
 #define MODE_TX 0
 #define MODE_RX 1
 #define MIN_TIME_BETWEEN_MODE_SWITCH 1
+#define ST54J_SE_MAGIC 0xE5
+#define ST54J_SE_PULSE_RESET _IOR(ST54J_SE_MAGIC, 0x01, unsigned int)
 
 /**
  * Open the spi device driver.
  *
- * @return The result of the operation, -1 if an error occurred, 0 if success.
+ * @return  -1 if an error occurred, file descriptor if success.
  */
 int SpiLayerDriver_open(char *spiDevPath);
 
@@ -64,5 +66,12 @@ int SpiLayerDriver_read(uint8_t *rxBuffer, unsigned int bytesToRead);
  * @return The amount of bytes written to the slave, -1 if something failed.
  */
 int SpiLayerDriver_write(uint8_t *writeBuffer, unsigned int bytesToWrite);
+
+/**
+ * Send a Reset pulse to the eSE.
+ *
+ * @return 0 if success, -1 if something failed.
+ */
+int SpiLayerDriver_reset();
 
 #endif /* SPILAYERDRIVER_H_ */
